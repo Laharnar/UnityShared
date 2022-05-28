@@ -1,4 +1,9 @@
-v1
-C:\Projects\2022\UnityShared\Scripts\Prototyping\
+v2
+Interact_Scripts
+C:\Projects\2022\UnityShared\Scripts\Prototyping
 1
 C:\Projects\2022\BaseAngles\BaseFighters\Assets\Scripts\Prototypin
+Interact_Editor
+C:\Projects\2022\UnityShared\Scripts\Editor
+1
+C:\Projects\2022\BaseAngles\BaseFighters\Assets\Editor

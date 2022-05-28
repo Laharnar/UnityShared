@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace UnityShared
 {
@@ -13,238 +15,24 @@ namespace UnityShared
     public partial class MainWindow : Window
     {
         static MainWindow main;
+        int SetupCount => SetupsTab.Items.Count;
+        int SelectedId => SetupsTab.SelectedIndex;
+
+        string BaseDir => AppDomain.CurrentDomain.BaseDirectory;
 
         public MainWindow()
         {
             main = this;
             InitializeComponent();
-            ReloadMetaFile();
+            LoadProject();
         }
-
-        string BaseDir => AppDomain.CurrentDomain.BaseDirectory;
 
         string Meta()
         {
             return Path.Combine(BaseDir, "meta.txt");
         }
 
-        void ReloadMetaFile()
-        {
-            // precleanup
-            projects.Items.Clear();
-            gitPath.Path = "";
-
-            if (!File.Exists(Meta()))
-                File.Create(Meta()).Close();
-            string[] lines = File.ReadAllLines("meta.txt");
-            if (lines.Length < 2)
-            {
-                Error("Empty meta, creating it.");
-                GenerateFromMeta(lines, "");
-                return;
-            }
-            var version = lines[0];
-            var gitFolderPath = lines[1];
-            GenerateFromMeta(lines, gitFolderPath);
-        }
-
-        private void GenerateFromMeta(string[] lines, string gitFolderPath)
-        {
-            gitPath.Path = gitFolderPath;
-
-            if (lines.Length > 3)
-            {
-                var projectFileCountStr = lines[2];
-                int projectFileCount;
-                if (!int.TryParse(projectFileCountStr, out projectFileCount))
-                    Error($"Invalid meta: project count isn't number.");
-                else if (lines.Length < 2 + projectFileCount)
-                    Error($"Invalid meta: invalid project count. {projectFileCount} {Meta()}");
-                else
-                {
-                    for (int i = 0; i < projectFileCount; i++)
-                    {
-                        var projectMeta = lines[3 + i];
-                        var projectSubfolder = projectMeta;
-
-                        AddProject(projectSubfolder);
-                    }
-                }
-            }
-
-            UpdateFoldersUpToDate(gitPath.Path);
-        }
-
-        private void UpdateFoldersUpToDate(string gitFolderPath)
-        {
-            foreach (var item in projects.Items)
-            {
-                var project = (singleProjet)item;
-                bool diffFileNames;
-                project.Updated = EqualFolders(gitFolderPath, project.Path, out diffFileNames);
-            }
-        }
-
-        static bool EqualFolders(string folder1, string folder2, out bool diffFileNames)
-        {
-            diffFileNames = false;
-            if (!Directory.Exists(folder1) || !Directory.Exists(folder2))
-                return false;
-            if (!folder1.EndsWith("\\"))
-                folder1 += '\\';
-            if (!folder2.EndsWith("\\"))
-                folder2 += '\\';
-
-            // both folders contain path and have same date.
-            Dictionary<string, bool> paths = new Dictionary<string, bool>();
-
-            var sourceFiles1 = Directory.GetFiles(folder1, "*", SearchOption.AllDirectories);
-            var sourceFiles2 = Directory.GetFiles(folder2, "*", SearchOption.AllDirectories);
-            int prefixLen1 = folder1.Length;
-            int prefixLen2 = folder2.Length;
-            foreach (var file in sourceFiles1)
-            {
-                if (file.EndsWith(".meta"))
-                    continue;
-                var fileInFolder = file.Substring(prefixLen1);
-                paths.Add(fileInFolder, false);
-            }
-            foreach (var file in sourceFiles2)
-            {
-                if (file.EndsWith(".meta"))
-                    continue;
-                var fileInFolder = file.Substring(prefixLen2);
-                if (!paths.ContainsKey(fileInFolder))
-                {
-                    paths.Add(fileInFolder, false);
-                    diffFileNames = true;
-                }
-                else
-                {
-                    // match to existing folder 1 file
-                    var timesMatch = File.GetLastWriteTime(file)
-                        .Equals(File.GetLastWriteTime(folder1 + fileInFolder));
-                    paths[fileInFolder] = timesMatch;
-                }
-            }
-            // any folder is updated
-            foreach (var item in paths)
-            {
-                if (!item.Value)
-                    return false;
-            }
-            return true;
-        }
-
-        internal static void Pull(singleProjet projec)
-        {
-            // don't erase when pulling, because it can override metadata
-            CopySourceToFolder(main.gitPath.Path, projec.Path, false);
-            projec.Updated = true;
-        }
-
-        internal static void PushGit(singleProjet projec)
-        {
-            bool diffFileNames;
-            bool changes = EqualFolders(projec.Path, projec.Path, out diffFileNames);
-            CopySourceToFolder(projec.Path, main.gitPath.Path, diffFileNames);
-            projec.Updated = true;
-        }
-
-        void SaveMeta()
-        {
-            string content = $"v1\n{gitPath.Path}\n{projects.Items.Count}";
-            for (int i = 0; i < projects.Items.Count; i++)
-                content += $"\n{((singleProjet)projects.Items[i]).Path}";
-            try
-            {
-                File.WriteAllText(Meta(), content);
-            }catch(IOException ioe)
-            {
-                Error(ioe.Message);
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            // add project
-            AddProject("empty");
-        }
-
-        private void AddProject(string path)
-        {
-            var projec = new singleProjet();
-            projects.Items.Add(projec);
-            projec.Path = path;
-        }
-
-        static void CopySourceToFolder(string sourceDir, string destinationDir, bool eraseDestination)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty (sourceDir) || string.IsNullOrEmpty(destinationDir))
-                    return;
-                // .NET Docs
-                // Get information about the source directory
-                var dir = new DirectoryInfo(sourceDir);
-
-                // Check if the source directory exists
-                if (!dir.Exists)
-                    throw new DirectoryNotFoundException($"Abort source transfer:Git folder is missing: {dir.FullName}{sourceDir} -> {destinationDir}");
-
-
-                // Cache directories before we start copying
-                DirectoryInfo[] dirs = dir.GetDirectories();
-
-                if (eraseDestination && Directory.Exists(destinationDir))
-                    Directory.Delete(destinationDir, true);
-
-                // Create the destination directory
-                Directory.CreateDirectory(destinationDir);
-
-                // Get the files in the source directory and copy to the destination directory
-                foreach (FileInfo file in dir.GetFiles())
-                {
-                    if (file.Name.EndsWith(".meta"))
-                    {
-                        if (eraseDestination)
-                        {
-                            Error("Do not erase meta files");
-                            return;
-                        }
-                        continue;
-                    }
-                    string targetFilePath = Path.Combine(destinationDir, file.Name);
-                    file.CopyTo(targetFilePath, true);
-                }
-
-                // If recursive and copying subdirectories, recursively call this method
-                foreach (DirectoryInfo subDir in dirs)
-                {
-                    string newDestinationDir = System.IO.Path.Combine(destinationDir, subDir.Name);
-                    CopySourceToFolder(subDir.FullName, newDestinationDir, eraseDestination);
-                }
-
-            }
-            catch (IOException ioe)
-            {
-                Error(ioe.Message);
-            }
-        }
-
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            SaveMeta();
-            ReloadMetaFile();
-        }
-
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            ReloadMetaFile();
-        }
-
-        private void Button_Click_3(object sender, RoutedEventArgs e)
+        private void ShowAppFolder_Click(object sender, RoutedEventArgs e)
         {
             Helpers.OpenFolder(BaseDir);
         }
@@ -256,23 +44,126 @@ namespace UnityShared
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            UpdateFoldersUpToDate(gitPath.Path);
-        }
-
-        private void Delete_Click(object sender, RoutedEventArgs e)
-        {
-            var id = projects.SelectedIndex;
-            if (id > -1)
+            if (SelectedId > -1)
             {
-                MessageBoxResult messageBoxResult = MessageBox.Show("Remove project?", "Delete", MessageBoxButton.YesNoCancel);
-                if (messageBoxResult == MessageBoxResult.Yes)
-                {
-                    projects.Items.RemoveAt(id);
-                }
+                var setup = GetSetup(SelectedId);
+                setup.UpdateFoldersUpToDate(setup.gitPath.Path);
             }
         }
-    }
 
+        setupScreen GetSetup(int id)
+        {
+            return ((setupScreen)GetTab(id).Content);
+        }
+
+        TabItem GetTab(int id)
+        {
+            return (TabItem)SetupsTab.Items[id];
+        }
+
+        private void NewSetup_Click(object sender, RoutedEventArgs e)
+        {
+            NewSetup();
+        }
+
+        void NewSetup()
+        {
+            SetupsTab.Items.Add(new TabItem()
+            {
+                Header = SetupName.Text,
+                Content = new setupScreen()
+            });
+        }
+
+        private void DeleteSetup_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedId > -1)
+            {
+                Helpers.YesNo(() =>
+                {
+                    SetupsTab.Items.RemoveAt(SelectedId);
+                });
+            }
+        }
+
+        private void SaveProject_Click(object sender, RoutedEventArgs e)
+        {
+            StringBuilder store = new StringBuilder();
+            store.Append("v2\n");
+            for (int i = 0; i < SetupCount; i++)
+            {
+                var tab = GetTab(i);
+                store.AppendLine(tab.Header.ToString());
+                var setup = GetSetup(i);
+                setup.Save(ref store);
+            }
+            File.WriteAllText("meta.txt", store.ToString());
+        }
+
+        internal static void Pull(singleProjet singleProjet)
+        {
+            var setup = main.GetSetup(main.SelectedId);
+            setupScreen.Pull(setup, singleProjet);
+        }
+
+        internal static void PushGit(singleProjet singleProjet)
+        {
+            var setup = main.GetSetup(main.SelectedId);
+            setupScreen.PushGit(setup, singleProjet);
+        }
+
+        void PrepareBeforeLoad()
+        {
+            // precleanup
+            for (int i = 0; i < SetupCount; i++)
+                GetSetup(i).Clear();
+
+            if (!File.Exists(Meta()))
+                File.Create(Meta()).Close();
+        }
+
+        private void LoadProject_Click(object sender, RoutedEventArgs e)
+        {
+            LoadProject();
+        }
+
+        private void LoadProject()
+        {
+            PrepareBeforeLoad();
+            var lines = File.ReadAllLines("meta.txt");
+            if (lines.Length == 0)
+            {
+                return;
+            }
+
+            var version = lines[0];
+            SetupsTab.Items.Clear();
+            int setupId = 0;
+            for (int i = 1; i < lines.Length; i++)
+            {
+                NewSetup();
+                var setup = GetSetup(setupId);
+                var setupName = lines[i];
+                var tab = GetTab(setupId);
+                tab.Header = setupName;
+                i = setup.OnLoadSetup(lines, i + 1, 2);
+                if (i == -1)
+                {
+                    Error($"Failure to load meta, invalid setup {i}");
+                    break;
+                }
+                setupId++;
+            }
+            if (setupId > 0)
+                SetupsTab.SelectedIndex = 0;
+        }
+
+        private void RenameSetup_Click(object sender, RoutedEventArgs e)
+        {
+            var tab = GetTab(SelectedId);
+            tab.Header = SetupName.Text;
+        }
+    }
 }
 
 public static class Helpers{
@@ -295,5 +186,12 @@ public static class Helpers{
     public static void Error(string msg)
     {
         MessageBox.Show(msg);
+    }
+
+    public static void YesNo(Action action)
+    {
+        MessageBoxResult messageBoxResult = MessageBox.Show("Remove project?", "Delete", MessageBoxButton.YesNoCancel);
+        if (messageBoxResult == MessageBoxResult.Yes)
+            action.Invoke();
     }
 }

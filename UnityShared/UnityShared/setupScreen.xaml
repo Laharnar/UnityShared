@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="UnityShared.setupScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:UnityShared"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid Background="#FFE5E5E5">
+            <ListBox x:Name="projects" Margin="10,72,10,10"/>
+            <Button Content="Add project" Margin="0,47,10,0" VerticalAlignment="Top" Click="Button_Click" HorizontalAlignment="Right" Width="90"/>
+            <Button Content="Del project" Margin="0,47,105,0" VerticalAlignment="Top" Click="Delete_Click" HorizontalAlignment="Right" Width="90"/>
+            <local:singleProjet x:Name="gitPath" Margin="39,36,0,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Left" Width="430"/>
+            <Label Content="Git sub folder: pick folder with source files" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="298"/>
+        </Grid>
+    </Grid>
+</UserControl>

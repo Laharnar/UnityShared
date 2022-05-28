@@ -34,30 +34,32 @@ namespace UnityShared
 
         public bool Updated {
             get {
-                codebg.Background = _updated ? Brushes.LightGreen : Brushes.Yellow;
+                UpdateColors();
                 return _updated;
             }
             set {
                 _updated = value;
-                codebg.Background = _updated ? Brushes.LightGreen : Brushes.Yellow;
+                UpdateColors();
             }
         }
 
-        public string Path { get {
+        private void UpdateColors()
+        {
+            if (bg != null)
                 bg.Background = !Directory.Exists(txtPath.Text) ? Brushes.OrangeRed : Brushes.LightGreen;
-                Updated = false;
+            if (codebg != null)
+                codebg.Background = _updated ? Brushes.LightGreen : Brushes.Yellow;
+        }
+
+        public string Path { get {
+
+                UpdateColors();
                 return txtPath.Text;
             }
             internal set { 
                 txtPath.Text = value;
-                Updated = false;
-                bg.Background = !Directory.Exists(txtPath.Text) ? Brushes.OrangeRed : Brushes.LightGreen;
+                UpdateColors();
             }
-        }
-
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -74,6 +76,11 @@ namespace UnityShared
         {
             // goto
             Helpers.OpenFolder(txtPath.Text, false);
+        }
+
+        private void txtPath_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Updated = false;
         }
     }
 }

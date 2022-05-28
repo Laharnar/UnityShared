@@ -16,3 +16,5 @@ C:\Projects\2022\UnityShared\UnityShared\UnityShared\obj\Debug\UnityShared.cspro
 C:\Projects\2022\UnityShared\UnityShared\UnityShared\obj\Debug\UnityShared.csproj.CoreCompileInputs.cache
 C:\Projects\2022\UnityShared\UnityShared\UnityShared\obj\Debug\UnityShared.exe
 C:\Projects\2022\UnityShared\UnityShared\UnityShared\obj\Debug\UnityShared.pdb
+C:\Projects\2022\UnityShared\UnityShared\UnityShared\obj\Debug\setupScreen.g.cs
+C:\Projects\2022\UnityShared\UnityShared\UnityShared\obj\Debug\setupScreen.baml
