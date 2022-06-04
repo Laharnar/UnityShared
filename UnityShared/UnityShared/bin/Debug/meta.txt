@@ -1,9 +1,11 @@
 v2
 Interact_Scripts
 C:\Projects\2022\UnityShared\Scripts\Prototyping
-1
+2
 C:\Projects\2022\BaseAngles\BaseFighters\Assets\Scripts\Prototypin
+C:\Projects\2022\2DTurnBasedRPG\Assets\Scripts\Prototyping
 Interact_Editor
 C:\Projects\2022\UnityShared\Scripts\Editor
-1
+2
 C:\Projects\2022\BaseAngles\BaseFighters\Assets\Editor
+C:\Projects\2022\2DTurnBasedRPG\Assets\Editor\InteractEditor
