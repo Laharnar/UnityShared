@@ -62,6 +62,8 @@ namespace UnityShared
             }
         }
 
+        public bool IsTemp { get => (bool)isTemp.IsChecked; set => isTemp.IsChecked = value; }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MainWindow.PushGit(this);
@@ -82,5 +84,6 @@ namespace UnityShared
         {
             Updated = false;
         }
+
     }
 }

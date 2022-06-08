@@ -45,7 +45,7 @@ namespace UnityShared
             gitPath.Path = "";
         }
 
-        public void UpdateFoldersUpToDate(string gitFolderPath)
+        public void UpdateAreFoldersLatest(string gitFolderPath)
         {
             foreach (var item in projects.Items)
             {
@@ -67,15 +67,34 @@ namespace UnityShared
             bool diffFileNames;
             bool changes = EqualFolders(projec.Path, projec.Path, out diffFileNames);
             CopySourceToFolder(projec.Path, setup.gitPath.Path, diffFileNames);
+            if (projec.IsTemp)
+            {
+                MessageBoxResult messageBoxResult = MessageBox.Show("Empty contents?", "Clear temp", MessageBoxButton.YesNoCancel);
+                if (messageBoxResult == MessageBoxResult.Yes)
+                {
+                    EmptyFolder(projec.Path, true);
+                }
+            }
             projec.Updated = true;
         }
 
+        private static void EmptyFolder(string path, bool areYouSure)
+        {
+            if (areYouSure && Directory.Exists(path))
+            {
+                foreach (var subDir in new DirectoryInfo(path).GetDirectories())
+                {
+                    subDir.Delete(true);
+                }
+            }
+        }
 
-        private void AddProject(string path)
+        private void AddProject(string path, bool isTemp = false)
         {
             var projec = new singleProjet();
             projects.Items.Add(projec);
             projec.Path = path;
+            projec.IsTemp = isTemp;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -87,12 +106,14 @@ namespace UnityShared
         internal void Save(ref StringBuilder store)
         {
             string content = $"{gitPath.Path}\n{projects.Items.Count}";
-            for (int i = 0; i < projects.Items.Count; i++)
-                content += $"\n{((singleProjet)projects.Items[i]).Path}";
+            for (int i = 0; i < projects.Items.Count; i++) {
+                var project = (singleProjet)projects.Items[i];
+                content += $"\n{project.Path} {project.IsTemp}";
+            }
             store.Append($"{content}\n");
         }
 
-        internal int OnLoadSetup(string[] store, int start, int minCount)
+        internal int OnLoadSetup(string[] store, int start, int minCount, string version)
         { 
             // return last line taken
             if (store.Length < start + minCount)
@@ -105,10 +126,11 @@ namespace UnityShared
                 return -1;
             for (int i = start + 2; i < start + 2 + count; i++)
             {
-                var projectSubfolder = store[i];
-                AddProject(projectSubfolder);
+                var projectSubfolder = version == "v2" ? store[i] : store[i].Split(' ')[0];
+                var isTemp = version == "v2" ? false : store[i].Split(' ')[1].ToLower() == "true";
+                AddProject(projectSubfolder, isTemp);
             }
-            UpdateFoldersUpToDate(gitPath.Path);
+            UpdateAreFoldersLatest(gitPath.Path);
             return start + 2 + count - 1; // returns last id
         }
 

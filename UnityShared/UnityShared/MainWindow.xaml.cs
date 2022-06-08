@@ -19,7 +19,6 @@ namespace UnityShared
         int SelectedId => SetupsTab.SelectedIndex;
 
         string BaseDir => AppDomain.CurrentDomain.BaseDirectory;
-
         public MainWindow()
         {
             main = this;
@@ -47,7 +46,7 @@ namespace UnityShared
             if (SelectedId > -1)
             {
                 var setup = GetSetup(SelectedId);
-                setup.UpdateFoldersUpToDate(setup.gitPath.Path);
+                setup.UpdateAreFoldersLatest(setup.gitPath.Path);
             }
         }
 
@@ -89,7 +88,7 @@ namespace UnityShared
         private void SaveProject_Click(object sender, RoutedEventArgs e)
         {
             StringBuilder store = new StringBuilder();
-            store.Append("v2\n");
+            store.Append("v3\n");
             for (int i = 0; i < SetupCount; i++)
             {
                 var tab = GetTab(i);
@@ -110,6 +109,17 @@ namespace UnityShared
         {
             var setup = main.GetSetup(main.SelectedId);
             setupScreen.PushGit(setup, singleProjet);
+
+            main.UpdateAllSetups();
+        }
+
+        void UpdateAllSetups()
+        {
+            for (int i = 0; i < SetupCount; i++)
+            {
+                var setup = GetSetup(i);
+                setup.UpdateAreFoldersLatest(setup.gitPath.Path);
+            }
         }
 
         void PrepareBeforeLoad()
@@ -135,25 +145,18 @@ namespace UnityShared
             {
                 return;
             }
-
-            var version = lines[0];
-            SetupsTab.Items.Clear();
+            var funcs = new Functions();
+            funcs.GetSetup = GetSetup;
+            funcs.NewSetup = NewSetup;
+            funcs.GetTab = GetTab;
             int setupId = 0;
-            for (int i = 1; i < lines.Length; i++)
-            {
-                NewSetup();
-                var setup = GetSetup(setupId);
-                var setupName = lines[i];
-                var tab = GetTab(setupId);
-                tab.Header = setupName;
-                i = setup.OnLoadSetup(lines, i + 1, 2);
-                if (i == -1)
-                {
-                    Error($"Failure to load meta, invalid setup {i}");
-                    break;
-                }
-                setupId++;
-            }
+            var version = lines[0];
+            var reader = new Version2Reader("v3");
+            SetupsTab.Items.Clear();
+            reader.LoadProject(
+                new List<string>() { "v2", "v3" },
+                version, lines, funcs);
+
             if (setupId > 0)
                 SetupsTab.SelectedIndex = 0;
         }
@@ -162,6 +165,46 @@ namespace UnityShared
         {
             var tab = GetTab(SelectedId);
             tab.Header = SetupName.Text;
+        }
+
+        class Functions
+        {
+            public Action NewSetup;
+            public Func<int, setupScreen> GetSetup; // id -> result
+            public Func<int, TabItem> GetTab;
+        }
+
+        class Version2Reader
+        {
+            string version;
+
+            public Version2Reader(string version)
+            {
+                this.version = version;
+            }
+
+            public void LoadProject(List<string> supportsVersions, string inFileVersion, string[] lines, Functions funcs)
+            {
+                if (!supportsVersions.Contains(version))
+                    return;
+
+                int setupId = 0;
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    funcs.NewSetup();
+                    var setup = funcs.GetSetup(setupId);
+                    var setupName = lines[i];
+                    var tab = funcs.GetTab(setupId);
+                    tab.Header = setupName;
+                    i = setup.OnLoadSetup(lines, i + 1, 2, inFileVersion);
+                    if (i == -1)
+                    {
+                        Error($"Failure to load meta, invalid setup {i}");
+                        break;
+                    }
+                    setupId++;
+                }
+            }
         }
     }
 }

@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:UnityShared"
-             mc:Ignorable="d" Height="25.5" Width="612.417">
-    <Grid>
+             mc:Ignorable="d" Height="25.5" Width="620.417">
+    <Grid >
         <Grid x:Name="bg">
             <TextBox x:Name="txtPath" Text="Folder" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Top" Width="368" TextChanged="txtPath_TextChanged" Margin="36,0,0,0"/>
             <Label Content="Path" HorizontalAlignment="Left" Margin="0,-3,0,0" VerticalAlignment="Top" Width="36"/>
@@ -15,7 +15,7 @@
             <Label Content="CODE" HorizontalAlignment="Left" Margin="0,-3,0,0" VerticalAlignment="Top" Width="44"/>
             <Button Content="Pull" HorizontalAlignment="Left" Height="23" VerticalAlignment="Top" Width="39" Click="Button_Click_1"/>
             <Button Content="PushGit" HorizontalAlignment="Left" Height="23" VerticalAlignment="Top" Width="50" Click="Button_Click"/>
-            <!--CheckBox Content="Auto" IsChecked="True" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="52" Checked="CheckBox_Checked"/-->
+            <ToggleButton x:Name="isTemp" Content="Is temp" IsChecked="False" HorizontalAlignment="Left" Height="23" VerticalAlignment="Top" Width="50"/>
         </StackPanel>
     </Grid>
 </UserControl>

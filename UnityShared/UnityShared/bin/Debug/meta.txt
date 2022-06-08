@@ -1,11 +1,19 @@
-v2
+v3
 Interact_Scripts
 C:\Projects\2022\UnityShared\Scripts\Prototyping
 2
-C:\Projects\2022\BaseAngles\BaseFighters\Assets\Scripts\Prototypin
-C:\Projects\2022\2DTurnBasedRPG\Assets\Scripts\Prototyping
+C:\Projects\2022\BaseAngles\BaseFighters\Assets\Scripts\Prototypin False
+C:\Projects\2022\2DTurnBasedRPG\Assets\Scripts\Prototyping False
 Interact_Editor
 C:\Projects\2022\UnityShared\Scripts\Editor
 2
-C:\Projects\2022\BaseAngles\BaseFighters\Assets\Editor
-C:\Projects\2022\2DTurnBasedRPG\Assets\Editor\InteractEditor
+C:\Projects\2022\BaseAngles\BaseFighters\Assets\Editor False
+C:\Projects\2022\2DTurnBasedRPG\Assets\Editor\InteractEditor False
+SpacePicsProduction
+C:\Projects\2022\2d\space\production
+1
+C:\Projects\2022\2d\space\newest True
+SpacePicsArchive
+C:\Projects\2022\2d\space\archive
+1
+C:\Projects\2022\2d\space\newest True
